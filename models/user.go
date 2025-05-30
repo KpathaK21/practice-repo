@@ -1,15 +1,18 @@
 package models
 
 import (
-	"golang.org/x/crypto/bcrypt"
 	"github.com/jinzhu/gorm"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
 	gorm.Model
-	Username string `gorm:"unique;not null"`
-	Email	 string `gorm:"unique;not null"`
-	Password string `gorm:"not null"` 
+	Username                string `gorm:"unique;not null"`
+	Email                   string `gorm:"unique;not null"`
+	Password                string `gorm:"not null"`
+	VerificationCode        string
+	VerificationCodeCreated int64 // Unix timestamp when the code was created
+	IsVerified              bool
 }
 
 func (u *User) SetPassword(pw string) error {
