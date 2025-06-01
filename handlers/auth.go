@@ -62,6 +62,12 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	confirmEmail := r.FormValue("confirm_email")
 	password := r.FormValue("password")
 	confirmPassword := r.FormValue("confirm_password")
+	role := r.FormValue("role") // Get the selected role
+
+	// Validate role
+	if role != "student" && role != "professor" && role != "ta" {
+		role = "student" // Default to student if invalid role
+	}
 
 	// Validation checks
 	switch {
@@ -87,6 +93,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		user := models.User{
 			Username: username,
 			Email:    email,
+			Role:     role, // Set the user role
 		}
 
 		// Set password
@@ -111,7 +118,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		emailBody := fmt.Sprintf(`
 Dear %s,
 
-Thank you for registering with our Learning Management System!
+Thank you for registering with our Learning Management System as a %s!
 
 To complete your registration, please use the following verification code:
 
@@ -123,7 +130,7 @@ This code will expire in 10 minutes. If you did not request this verification, p
 
 Best regards,
 The Learning Management System Team
-		`, username, code)
+		`, username, role, code)
 
 		// Print the verification code to the console for debugging
 		fmt.Println("Generated verification code for", email, ":", code)
@@ -203,17 +210,17 @@ func Verify(w http.ResponseWriter, r *http.Request) {
 	user.VerificationCode = ""
 	db.DB.Save(&user)
 
-	// Send welcome email with improved content
+	// Send welcome email with improved content and role-specific message
 	welcomeEmailBody := fmt.Sprintf(`
-Dear Student,
+Dear %s,
 
 Welcome to the Learning Management System! Your email has been successfully verified.
 
-You can now sign in to your account and start exploring our courses and learning resources.
+You have registered as a %s. You can now sign in to your account and start exploring our platform.
 
 Best regards,
 The Learning Management System Team
-	`)
+	`, user.Username, user.Role)
 
 	sendEmail(user.Email, "Welcome", welcomeEmailBody)
 
@@ -265,8 +272,8 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Redirect to dashboard
-	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	// Redirect to dashboard with email parameter
+	http.Redirect(w, r, "/dashboard?email="+email, http.StatusSeeOther)
 }
 
 func renderSigninError(w http.ResponseWriter, message string) {
@@ -274,9 +281,33 @@ func renderSigninError(w http.ResponseWriter, message string) {
 	tmpl.Execute(w, struct{ Error string }{Error: message})
 }
 
+// Update the Dashboard handler to serve different templates based on user role
 func Dashboard(w http.ResponseWriter, r *http.Request) {
+	// In a real application, you would get the user from the session
+	// For this example, we'll get the user from the email parameter
+	email := r.URL.Query().Get("email")
+
+	var user models.User
+	var username string = "User" // Default username if not found
+	var role string = "student"  // Default role
+
+	// If email is provided, try to find the user
+	if email != "" {
+		if err := db.DB.Where("email = ?", email).First(&user).Error; err == nil {
+			username = user.Username
+			role = user.Role
+		}
+	}
+
+	// Pass the username and role to the template
 	tmpl := template.Must(template.ParseFiles("static/dashboard.html"))
-	tmpl.Execute(w, nil)
+	tmpl.Execute(w, struct {
+		Username string
+		Role     string
+	}{
+		Username: username,
+		Role:     role,
+	})
 }
 
 // extractVerificationCode extracts the verification code from the email body

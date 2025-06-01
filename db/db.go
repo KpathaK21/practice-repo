@@ -1,12 +1,12 @@
 package db
 
-import(
+import (
 	"fmt"
 	"log"
 
+	"github.com/KpathaK21/practice-repo/models"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/KpathaK21/practice-repo/models"
 )
 
 var DB *gorm.DB
@@ -18,6 +18,22 @@ func Init() {
 	if err != nil {
 		log.Fatal("Failed to connect:", err)
 	}
-	DB.AutoMigrate(&models.User{})
+
+	// Set the DB variable in models package
+	models.DB = DB
+
+	// Auto migrate all models
+	DB.AutoMigrate(
+		&models.User{},
+		&models.Course{},
+		&models.Material{},
+		&models.Assignment{},
+		&models.Submission{},
+		&models.Announcement{},
+		&models.Discussion{},
+		&models.DiscussionReply{},
+		&models.Message{},
+	)
+
 	fmt.Println("Database connected and migrated.")
 }

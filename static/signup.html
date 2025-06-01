@@ -39,6 +39,12 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
+        .role-selection {
+            margin: 15px 0;
+        }
+        .role-option {
+            margin: 10px 0;
+        }
         button {
             width: 100%;
             background-color: #e8491d;
@@ -80,6 +86,23 @@
             <input type="email" name="confirm_email" placeholder="Re-enter Email" />
             <input type="password" name="password" placeholder="Password" />
             <input type="password" name="confirm_password" placeholder="Re-enter Password" />
+            
+            <div class="role-selection">
+                <p>Sign up as:</p>
+                <div class="role-option">
+                    <input type="radio" id="student" name="role" value="student" checked>
+                    <label for="student">Student</label>
+                </div>
+                <div class="role-option">
+                    <input type="radio" id="professor" name="role" value="professor">
+                    <label for="professor">Professor</label>
+                </div>
+                <div class="role-option">
+                    <input type="radio" id="ta" name="role" value="ta">
+                    <label for="ta">Teaching Assistant (TA)</label>
+                </div>
+            </div>
+            
             <button type="submit">Sign Up</button>
             
             {{if .Error}}

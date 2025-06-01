@@ -11,51 +11,111 @@
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
+            display: flex;
+            min-height: 100vh;
         }
-        .container {
-            width: 80%;
-            margin: auto;
-            overflow: hidden;
-            padding: 20px;
-        }
-        header {
-            background: #35424a;
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: #35424a;
             color: white;
-            padding: 20px;
-            border-bottom: #e8491d 3px solid;
+            padding-top: 20px;
+            position: fixed;
+            height: 100%;
+            overflow-y: auto;
         }
-        header h1 {
+        
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+        
+        .sidebar-header h2 {
             margin: 0;
+            font-size: 1.5rem;
         }
-        nav {
-            float: right;
-            margin-top: 10px;
+        
+        .sidebar-menu {
+            padding: 0;
+            list-style: none;
         }
-        nav a {
+        
+        .sidebar-menu li {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .sidebar-menu a {
+            display: block;
+            padding: 15px 20px;
             color: white;
             text-decoration: none;
-            margin-left: 15px;
+            transition: background-color 0.3s;
         }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: #e8491d;
+        }
+        
+        .sidebar-menu i {
+            margin-right: 10px;
+        }
+        
+        /* Account Submenu */
+        .account-submenu {
+            display: none;
+            background-color: #2a363e;
+            padding: 10px 0;
+        }
+        
+        .account-submenu.show {
+            display: block;
+        }
+        
+        .account-submenu a {
+            padding: 10px 30px;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .welcome-banner {
+            background: #e8491d;
+            color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
-            margin-top: 20px;
         }
+        
         .card {
             background: white;
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+        
         .card h3 {
             margin-top: 0;
             color: #35424a;
         }
+        
         .card-footer {
             margin-top: 15px;
             text-align: right;
         }
+        
         .btn {
             display: inline-block;
             background: #e8491d;
@@ -65,83 +125,497 @@
             border-radius: 5px;
             text-decoration: none;
         }
-        .welcome-banner {
-            background: #e8491d;
-            color: white;
-            padding: 15px;
-            margin-bottom: 20px;
+        
+        /* Calendar Styles */
+        .calendar {
+            background: white;
             border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .calendar-nav button {
+            background: #35424a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        
+        .calendar-day {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #eee;
+        }
+        
+        .calendar-day.header {
+            font-weight: bold;
+            background-color: #f4f4f4;
+        }
+        
+        /* Inbox Styles */
+        .inbox {
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .message-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .message-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .message-item:last-child {
+            border-bottom: none;
+        }
+        
+        .new-message-btn {
+            margin-bottom: 15px;
+        }
+        
+        /* Content Sections */
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Learning Management System</h1>
-            <nav>
-                <a href="/dashboard">Dashboard</a>
-                <a href="/courses">My Courses</a>
-                <a href="/profile">Profile</a>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>LMS Dashboard</h2>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="menu-item" data-target="account">Account</a></li>
+            <li class="account-submenu" id="account-submenu">
+                <div style="padding: 10px 30px; color: #ddd;">{{.Username}}</div>
                 <a href="/">Logout</a>
-            </nav>
+            </li>
+            <li><a href="#" class="menu-item active" data-target="dashboard">Dashboard</a></li>
+            <li><a href="#" class="menu-item" data-target="courses">Courses</a></li>
+            <li><a href="#" class="menu-item" data-target="calendar">Calendar</a></li>
+            <li><a href="#" class="menu-item" data-target="inbox">Inbox</a></li>
+            
+            <!-- Professor-specific menu items -->
+            {{if eq .Role "professor"}}
+            <li><a href="#" class="menu-item" data-target="create-course">Create Course</a></li>
+            <li><a href="#" class="menu-item" data-target="manage-users">Manage Users</a></li>
+            <li><a href="#" class="menu-item" data-target="analytics">Analytics</a></li>
+            {{end}}
+            
+            <!-- TA-specific menu items -->
+            {{if eq .Role "ta"}}
+            <li><a href="#" class="menu-item" data-target="grading">Grading</a></li>
+            {{end}}
+            
+            <li><a href="#" class="menu-item" data-target="history">History</a></li>
+            <li><a href="#" class="menu-item" data-target="help">Help</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Section -->
+        <div class="content-section active" id="dashboard-section">
+            <div class="welcome-banner">
+                <h2>Welcome to your Learning Dashboard, {{.Username}}!</h2>
+                <p>Track your progress, access your courses, and manage your learning journey all in one place.</p>
+            </div>
+
+            <!-- Role-specific dashboard content -->
+            {{if eq .Role "professor"}}
+            <h3>Professor Dashboard</h3>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>My Courses</h3>
+                    <p>Manage your courses and teaching materials.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">View Courses</a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Pending Assignments</h3>
+                    <p>Review and grade student submissions.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">Grade Assignments</a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Course Analytics</h3>
+                    <p>View student performance and engagement metrics.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">View Analytics</a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>User Management</h3>
+                    <p>Approve enrollments and manage teaching assistants.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">Manage Users</a>
+                    </div>
+                </div>
+            </div>
+            {{else if eq .Role "ta"}}
+            <h3>Teaching Assistant Dashboard</h3>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>Assigned Courses</h3>
+                    <p>View courses you're assisting with.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">View Courses</a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Grading Queue</h3>
+                    <p>Review and grade student submissions.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">Grade Assignments</a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Student Questions</h3>
+                    <p>Answer questions in discussion forums.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">View Discussions</a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Student Progress</h3>
+                    <p>Monitor student performance and identify those needing help.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">View Progress</a>
+                    </div>
+                </div>
+            </div>
+            {{else}}
+            <h3>Student Dashboard</h3>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>My Courses</h3>
+                    <p>Access all your enrolled courses and continue your learning journey.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">View Courses</a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Upcoming Assignments</h3>
+                    <p>Stay on top of your assignments and deadlines.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">View Assignments</a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Recent Announcements</h3>
+                    <p>Check the latest announcements from your instructors.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">View All</a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Learning Progress</h3>
+                    <p>Track your progress across all your courses.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">View Progress</a>
+                    </div>
+                </div>
+            </div>
+            {{end}}
         </div>
-    </header>
 
-    <div class="container">
-        <div class="welcome-banner">
-            <h2>Welcome to your Learning Dashboard!</h2>
-            <p>Track your progress, access your courses, and manage your learning journey all in one place.</p>
+        <!-- Courses Section -->
+        <div class="content-section" id="courses-section">
+            <h2>My Courses</h2>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>Introduction to Computer Science</h3>
+                    <p>Learn the fundamentals of computer science and programming.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">Enter Course</a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Data Structures and Algorithms</h3>
+                    <p>Master the essential data structures and algorithms.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">Enter Course</a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Web Development</h3>
+                    <p>Learn to build modern web applications.</p>
+                    <div class="card-footer">
+                        <a href="#" class="btn">Enter Course</a>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="dashboard-grid">
-            <div class="card">
-                <h3>My Courses</h3>
-                <p>Access all your enrolled courses and continue your learning journey.</p>
-                <div class="card-footer">
-                    <a href="#" class="btn">View Courses</a>
+        <!-- Calendar Section -->
+        <div class="content-section" id="calendar-section">
+            <h2>Calendar</h2>
+            <div class="calendar">
+                <div class="calendar-header">
+                    <h3 id="current-month">September 2023</h3>
+                    <div class="calendar-nav">
+                        <button id="prev-month">Previous</button>
+                        <button id="next-month">Next</button>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="calendar-grid">
+                    <!-- Calendar days will be generated by JavaScript -->
                 </div>
             </div>
+        </div>
 
+        <!-- Inbox Section -->
+        <div class="content-section" id="inbox-section">
+            <h2>Inbox</h2>
+            <div class="inbox">
+                <button class="btn new-message-btn" id="new-message-btn">New Message</button>
+                <div id="new-message-form" style="display: none; margin-bottom: 20px;">
+                    <h3>Compose New Message</h3>
+                    <form>
+                        <div style="margin-bottom: 10px;">
+                            <label for="recipient">To:</label>
+                            <select id="recipient" style="width: 100%; padding: 8px;">
+                                <option value="">Select Recipient</option>
+                                <option value="professor1">Professor Smith</option>
+                                <option value="professor2">Professor Johnson</option>
+                                <option value="ta1">TA Williams</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label for="subject">Subject:</label>
+                            <input type="text" id="subject" style="width: 100%; padding: 8px;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label for="message">Message:</label>
+                            <textarea id="message" rows="5" style="width: 100%; padding: 8px;"></textarea>
+                        </div>
+                        <button type="button" class="btn">Send</button>
+                        <button type="button" id="cancel-message" style="background-color: #999;">Cancel</button>
+                    </form>
+                </div>
+                <ul class="message-list">
+                    <li class="message-item">
+                        <div>
+                            <strong>Professor Smith</strong>
+                            <p>Assignment Feedback</p>
+                        </div>
+                        <span>Sep 15</span>
+                    </li>
+                    <li class="message-item">
+                        <div>
+                            <strong>TA Williams</strong>
+                            <p>Lab Session Update</p>
+                        </div>
+                        <span>Sep 12</span>
+                    </li>
+                    <li class="message-item">
+                        <div>
+                            <strong>System Notification</strong>
+                            <p>New Course Materials Available</p>
+                        </div>
+                        <span>Sep 10</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="content-section" id="history-section">
+            <h2>History</h2>
             <div class="card">
-                <h3>Progress Tracker</h3>
-                <p>Track your learning progress across all courses.</p>
+                <h3>Recent Activity</h3>
+                <ul style="padding-left: 20px;">
+                    <li>Viewed Introduction to Computer Science</li>
+                    <li>Submitted Assignment: Data Structures Quiz</li>
+                    <li>Downloaded Web Development lecture notes</li>
+                    <li>Participated in Discussion: Algorithm Efficiency</li>
+                    <li>Viewed Calendar</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="content-section" id="help-section">
+            <h2>Help & Support</h2>
+            <div class="card">
+                <h3>Frequently Asked Questions</h3>
+                <p>Find answers to common questions about using the Learning Management System.</p>
                 <div class="card-footer">
-                    <a href="#" class="btn">View Progress</a>
+                    <a href="#" class="btn">View FAQs</a>
                 </div>
             </div>
-
+            
             <div class="card">
-                <h3>Upcoming Deadlines</h3>
-                <p>Stay on top of your assignments and project deadlines.</p>
+                <h3>Contact Support</h3>
+                <p>Need help? Contact our support team for assistance.</p>
                 <div class="card-footer">
-                    <a href="#" class="btn">View Calendar</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Recommended Courses</h3>
-                <p>Discover new courses based on your interests and learning history.</p>
-                <div class="card-footer">
-                    <a href="#" class="btn">Explore</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Messages</h3>
-                <p>Communicate with instructors and fellow students.</p>
-                <div class="card-footer">
-                    <a href="#" class="btn">View Messages</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Resources</h3>
-                <p>Access learning resources, guides, and helpful materials.</p>
-                <div class="card-footer">
-                    <a href="#" class="btn">View Resources</a>
+                    <a href="#" class="btn">Contact Support</a>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        // Toggle account submenu
+        document.querySelector('[data-target="account"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('account-submenu').classList.toggle('show');
+        });
+
+        // Navigation between sections
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                if (this.dataset.target !== 'account') {
+                    e.preventDefault();
+                    
+                    // Remove active class from all menu items
+                    document.querySelectorAll('.menu-item').forEach(i => {
+                        i.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked menu item
+                    this.classList.add('active');
+                    
+                    // Hide all content sections
+                    document.querySelectorAll('.content-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // Show the target content section
+                    document.getElementById(this.dataset.target + '-section').classList.add('active');
+                }
+            });
+        });
+
+        // Calendar functionality
+        const calendarGrid = document.getElementById('calendar-grid');
+        const currentMonthElement = document.getElementById('current-month');
+        const prevMonthButton = document.getElementById('prev-month');
+        const nextMonthButton = document.getElementById('next-month');
+        
+        let currentDate = new Date();
+        
+        function renderCalendar() {
+            calendarGrid.innerHTML = '';
+            
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            currentMonthElement.textContent = new Date(year, month, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+            
+            // Add day headers
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            days.forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('calendar-day', 'header');
+                dayElement.textContent = day;
+                calendarGrid.appendChild(dayElement);
+            });
+            
+            // Get the first day of the month
+            const firstDay = new Date(year, month, 1).getDay();
+            
+            // Get the number of days in the month
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('calendar-day');
+                calendarGrid.appendChild(emptyDay);
+            }
+            
+            // Add days of the month
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('calendar-day');
+                dayElement.textContent = i;
+                
+                // Highlight today's date
+                const today = new Date();
+                if (year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) {
+                    dayElement.style.backgroundColor = '#e8491d';
+                    dayElement.style.color = 'white';
+                    dayElement.style.fontWeight = 'bold';
+                }
+                
+                calendarGrid.appendChild(dayElement);
+            }
+        }
+        
+        // Initialize calendar
+        renderCalendar();
+        
+        // Previous month button
+        prevMonthButton.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+        
+        // Next month button
+        nextMonthButton.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        // New message functionality
+        document.getElementById('new-message-btn').addEventListener('click', function() {
+            document.getElementById('new-message-form').style.display = 'block';
+            this.style.display = 'none';
+        });
+
+        document.getElementById('cancel-message').addEventListener('click', function() {
+            document.getElementById('new-message-form').style.display = 'none';
+            document.getElementById('new-message-btn').style.display = 'block';
+        });
+    </script>
 </body>
 </html>
