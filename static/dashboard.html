@@ -405,33 +405,36 @@
             {{end}}
         </div>
 
+        <!-- Add this right after the welcome banner in the dashboard-section -->
+        {{if .Message}}
+        <div class="alert" style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 20px; border-radius: 5px;">
+            {{.Message}}
+        </div>
+        {{end}}
+        
+        <!-- Then update the Courses Section -->
         <!-- Courses Section -->
         <div class="content-section" id="courses-section">
             <h2>My Courses</h2>
             <div class="dashboard-grid">
-                <div class="card">
-                    <h3>Introduction to Computer Science</h3>
-                    <p>Learn the fundamentals of computer science and programming.</p>
-                    <div class="card-footer">
-                        <a href="#" class="btn">Enter Course</a>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <h3>Data Structures and Algorithms</h3>
-                    <p>Master the essential data structures and algorithms.</p>
-                    <div class="card-footer">
-                        <a href="#" class="btn">Enter Course</a>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <h3>Web Development</h3>
-                    <p>Learn to build modern web applications.</p>
-                    <div class="card-footer">
-                        <a href="#" class="btn">Enter Course</a>
-                    </div>
-                </div>
+                {{if .Courses}}
+                    {{range .Courses}}
+                        <div class="card">
+                            <h3>{{.Title}}</h3>
+                            <p>{{.Description}}</p>
+                            <div class="card-footer">
+                                <a href="/course/?id={{.ID}}&email={{$.Email}}" class="btn">Enter Course</a>
+                            </div>
+                        </div>
+                    {{end}}
+                {{else}}
+                    <p>You don't have any courses yet.</p>
+                    {{if eq .Role "professor"}}
+                        <p>Click on "Create Course" in the sidebar to create your first course.</p>
+                    {{else if eq .Role "student"}}
+                        <p>Contact your professor for enrollment information.</p>
+                    {{end}}
+                {{end}}
             </div>
         </div>
 
@@ -511,7 +514,7 @@
         <div class="content-section" id="create-course-section">
             <h2>Create New Course</h2>
             <div class="container">
-                <form method="POST" action="/course/create">
+                <form method="POST" action="/course/create?email={{.Email}}">
                     <div class="form-group">
                         <label for="title">Course Title</label>
                         <input type="text" id="title" name="title" required>
@@ -551,7 +554,7 @@
                 </div>
                 
                 <div id="email-tab" class="tab-content active">
-                    <form method="POST" action="/enroll-by-email">
+                    <form method="POST" action="/enroll-by-email?email={{.Email}}">
                         <input type="hidden" name="course_id" id="course_id_email">
                         <div class="form-group">
                             <label for="course_select_email">Select Course</label>
@@ -573,7 +576,7 @@
                 </div>
                 
                 <div id="list-tab" class="tab-content">
-                    <form method="POST" action="/course/enroll-student">
+                    <form method="POST" action="/course/enroll-student?email={{.Email}}">
                         <input type="hidden" name="course_id" id="course_id_list">
                         <div class="form-group">
                             <label for="course_select_list">Select Course</label>
@@ -799,40 +802,6 @@
     </script>
 }
 
-<!-- Create Course Section -->
-<div class="content-section" id="create-course-section">
-    <h2>Create New Course</h2>
-    <div class="container">
-        <form method="POST" action="/course/create">
-            <div class="form-group">
-                <label for="title">Course Title</label>
-                <input type="text" id="title" name="title" required>
-            </div>
-            <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" name="description" required></textarea>
-            </div>
-            <div class="form-group">
-                <label for="term">Term</label>
-                <input type="text" id="term" name="term" placeholder="e.g., Fall 2023" required>
-            </div>
-            <div class="form-group">
-                <label for="syllabus">Syllabus</label>
-                <textarea id="syllabus" name="syllabus"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="status">Status</label>
-                <select id="status" name="status" required>
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                    <option value="closed">Closed</option>
-                </select>
-            </div>
-            <button type="submit" class="btn">Create Course</button>
-        </form>
-    </div>
-</div>
-
 <!-- Manage Users Section -->
 <div class="content-section" id="manage-users-section">
     <h2>Manage Users</h2>
@@ -843,7 +812,7 @@
         </div>
         
         <div id="email-tab" class="tab-content active">
-            <form method="POST" action="/enroll-by-email">
+            <form method="POST" action="/enroll-by-email?email={{.Email}}">
                 <input type="hidden" name="course_id" id="course_id_email">
                 <div class="form-group">
                     <label for="course_select_email">Select Course</label>
@@ -865,7 +834,7 @@
         </div>
         
         <div id="list-tab" class="tab-content">
-            <form method="POST" action="/course/enroll-student">
+            <form method="POST" action="/course/enroll-student?email={{.Email}}">
                 <input type="hidden" name="course_id" id="course_id_list">
                 <div class="form-group">
                     <label for="course_select_list">Select Course</label>

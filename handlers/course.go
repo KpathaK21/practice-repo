@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -147,7 +148,7 @@ func EnrolledOnly(next http.HandlerFunc) http.HandlerFunc {
 func CreateCourse(w http.ResponseWriter, r *http.Request) {
 	// Get email from query parameter for both GET and POST requests
 	email := r.URL.Query().Get("email")
-	
+
 	if r.Method != http.MethodPost {
 		// Render the create course form with the email parameter
 		template.Must(template.ParseFiles("static/create_course.html")).Execute(w, struct {
@@ -557,14 +558,26 @@ func EnrollStudent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if student is already enrolled
+	if student.IsEnrolledIn(uint(courseID)) {
+		message := fmt.Sprintf("Student %s is already enrolled in %s", student.Email, course.Title)
+		redirectURL := fmt.Sprintf("/dashboard?email=%s&message=%s", email, url.QueryEscape(message))
+		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+		return
+	}
+
 	// Add student to course students
 	if err := db.DB.Model(&course).Association("Students").Append(&student).Error; err != nil {
 		http.Error(w, "Error enrolling student: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Redirect to dashboard instead of course page
-	http.Redirect(w, r, fmt.Sprintf("/dashboard?email=%s", email), http.StatusSeeOther)
+	// Create success message
+	message := fmt.Sprintf("Successfully enrolled %s in %s", student.Email, course.Title)
+
+	// Redirect to dashboard with message
+	redirectURL := fmt.Sprintf("/dashboard?email=%s&message=%s", email, url.QueryEscape(message))
+	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
 
 // EnrollByEmail - For professors to enroll students using their email addresses
@@ -598,26 +611,33 @@ func EnrollByEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Variables to track enrollment results
+	successCount := 0
+	failures := []string{}
+	successEmails := []string{}
+
 	// Process single email
 	studentEmail := r.FormValue("student_email")
 	if studentEmail != "" {
 		// Find student by email
 		var student models.User
 		if err := db.DB.Where("email = ?", studentEmail).First(&student).Error; err != nil {
-			http.Error(w, "Student with email "+studentEmail+" not found", http.StatusNotFound)
-			return
-		}
-
-		// Check if student has the student role
-		if !student.IsStudent() {
-			http.Error(w, "User with email "+studentEmail+" is not a student", http.StatusBadRequest)
-			return
-		}
-
-		// Add student to course students
-		if err := db.DB.Model(&course).Association("Students").Append(&student).Error; err != nil {
-			http.Error(w, "Error enrolling student: "+err.Error(), http.StatusInternalServerError)
-			return
+			failures = append(failures, studentEmail+" (not found)")
+		} else {
+			// Check if student has the student role
+			if !student.IsStudent() {
+				failures = append(failures, studentEmail+" (not a student)")
+			} else if student.IsEnrolledIn(uint(courseID)) {
+				failures = append(failures, studentEmail+" (already enrolled)")
+			} else {
+				// Add student to course students
+				if err := db.DB.Model(&course).Association("Students").Append(&student).Error; err != nil {
+					failures = append(failures, studentEmail+" (database error)")
+				} else {
+					successCount++
+					successEmails = append(successEmails, studentEmail)
+				}
+			}
 		}
 	}
 
@@ -626,9 +646,6 @@ func EnrollByEmail(w http.ResponseWriter, r *http.Request) {
 	if multipleEmails != "" {
 		// Split the text area content by newline
 		emails := strings.Split(multipleEmails, "\n")
-
-		successCount := 0
-		failures := []string{}
 
 		for _, studentEmail := range emails {
 			// Trim whitespace
@@ -663,19 +680,26 @@ func EnrollByEmail(w http.ResponseWriter, r *http.Request) {
 			}
 
 			successCount++
-		}
-
-		// If there were any failures, show them
-		if len(failures) > 0 {
-			message := fmt.Sprintf("Successfully enrolled %d students. Failed to enroll the following emails:\n%s",
-				successCount, strings.Join(failures, "\n"))
-			http.Error(w, message, http.StatusPartialContent)
-			return
+			successEmails = append(successEmails, studentEmail)
 		}
 	}
 
-	// Redirect to dashboard instead of course page
-	http.Redirect(w, r, fmt.Sprintf("/dashboard?email=%s", email), http.StatusSeeOther)
+	// Create a message to display on the dashboard
+	message := ""
+	if successCount > 0 {
+		message = fmt.Sprintf("Successfully enrolled %d student(s) in %s.", successCount, course.Title)
+	}
+
+	if len(failures) > 0 {
+		if message != "" {
+			message += " "
+		}
+		message += fmt.Sprintf("Failed to enroll: %s", strings.Join(failures, ", "))
+	}
+
+	// Redirect to dashboard with message as a query parameter
+	redirectURL := fmt.Sprintf("/dashboard?email=%s&message=%s", email, url.QueryEscape(message))
+	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
 
 // ExportGrades - For professors to export grades as CSV

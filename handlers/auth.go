@@ -286,29 +286,48 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 	// In a real application, you would get the user from the session
 	// For this example, we'll get the user from the email parameter
 	email := r.URL.Query().Get("email")
+	message := r.URL.Query().Get("message") // Get message from query parameter
 
 	var user models.User
 	var username string = "User" // Default username if not found
 	var role string = "student"  // Default role
+	var courses []models.Course  // To store user's courses
 
 	// If email is provided, try to find the user
 	if email != "" {
 		if err := db.DB.Where("email = ?", email).First(&user).Error; err == nil {
 			username = user.Username
 			role = user.Role
+
+			// Fetch courses based on user role
+			switch role {
+			case "professor":
+				// Get courses where user is the professor
+				db.DB.Where("professor_id = ?", user.ID).Find(&courses)
+			case "ta":
+				// Get courses where user is a TA
+				db.DB.Table("courses").Joins("JOIN course_assistants ON courses.id = course_assistants.course_id").Where("course_assistants.user_id = ?", user.ID).Find(&courses)
+			case "student":
+				// Get courses where user is enrolled
+				db.DB.Table("courses").Joins("JOIN user_courses ON courses.id = user_courses.course_id").Where("user_courses.user_id = ?", user.ID).Find(&courses)
+			}
 		}
 	}
 
-	// Pass the username, role, and email to the template
+	// Pass the username, role, email, courses, and message to the template
 	tmpl := template.Must(template.ParseFiles("static/dashboard.html"))
 	tmpl.Execute(w, struct {
 		Username string
 		Role     string
 		Email    string
+		Courses  []models.Course
+		Message  string
 	}{
 		Username: username,
 		Role:     role,
 		Email:    email,
+		Courses:  courses,
+		Message:  message,
 	})
 }
 
