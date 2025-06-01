@@ -8,7 +8,9 @@ import (
 // DBInterface provides database access methods
 type DBInterface interface {
 	Where(query interface{}, args ...interface{}) *gorm.DB
+	First(out interface{}, where ...interface{}) *gorm.DB
 	Table(name string) *gorm.DB
+	Count(value interface{}) *gorm.DB
 }
 
 // Current DB instance - to be set by the db package

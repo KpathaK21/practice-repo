@@ -299,14 +299,16 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Pass the username and role to the template
+	// Pass the username, role, and email to the template
 	tmpl := template.Must(template.ParseFiles("static/dashboard.html"))
 	tmpl.Execute(w, struct {
 		Username string
 		Role     string
+		Email    string
 	}{
 		Username: username,
 		Role:     role,
+		Email:    email,
 	})
 }
 

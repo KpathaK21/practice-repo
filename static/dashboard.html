@@ -211,6 +211,50 @@
         .content-section.active {
             display: block;
         }
+
+        /* Tabs for Manage Users */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background-color: #f4f4f4;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+
+        .tab.active {
+            background-color: #e8491d;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -220,11 +264,6 @@
             <h2>LMS Dashboard</h2>
         </div>
         <ul class="sidebar-menu">
-            <li><a href="#" class="menu-item" data-target="account">Account</a></li>
-            <li class="account-submenu" id="account-submenu">
-                <div style="padding: 10px 30px; color: #ddd;">{{.Username}}</div>
-                <a href="/">Logout</a>
-            </li>
             <li><a href="#" class="menu-item active" data-target="dashboard">Dashboard</a></li>
             <li><a href="#" class="menu-item" data-target="courses">Courses</a></li>
             <li><a href="#" class="menu-item" data-target="calendar">Calendar</a></li>
@@ -244,6 +283,7 @@
             
             <li><a href="#" class="menu-item" data-target="history">History</a></li>
             <li><a href="#" class="menu-item" data-target="help">Help</a></li>
+            <li><a href="/">Logout</a></li>
         </ul>
     </div>
 
@@ -467,6 +507,94 @@
             </div>
         </div>
 
+        <!-- Create Course Section -->
+        <div class="content-section" id="create-course-section">
+            <h2>Create New Course</h2>
+            <div class="container">
+                <form method="POST" action="/course/create">
+                    <div class="form-group">
+                        <label for="title">Course Title</label>
+                        <input type="text" id="title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="term">Term</label>
+                        <input type="text" id="term" name="term" placeholder="e.g., Fall 2023" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="syllabus">Syllabus</label>
+                        <textarea id="syllabus" name="syllabus"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" name="status" required>
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Create Course</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Manage Users Section -->
+        <div class="content-section" id="manage-users-section">
+            <h2>Manage Users</h2>
+            <div class="container">
+                <div class="tabs">
+                    <div class="tab active" onclick="showTab('email-tab')">Enroll by Email</div>
+                    <div class="tab" onclick="showTab('list-tab')">Enroll from List</div>
+                </div>
+                
+                <div id="email-tab" class="tab-content active">
+                    <form method="POST" action="/enroll-by-email">
+                        <input type="hidden" name="course_id" id="course_id_email">
+                        <div class="form-group">
+                            <label for="course_select_email">Select Course</label>
+                            <select id="course_select_email" onchange="updateCourseId('course_select_email', 'course_id_email')" required>
+                                <option value="">-- Select a Course --</option>
+                                <!-- Courses will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="student_email">Student Email</label>
+                            <input type="email" id="student_email" name="student_email">
+                        </div>
+                        <div class="form-group">
+                            <label for="multiple_emails">Or Enter Multiple Emails (one per line)</label>
+                            <textarea id="multiple_emails" name="multiple_emails" placeholder="student1@example.com&#10;student2@example.com&#10;student3@example.com"></textarea>
+                        </div>
+                        <button type="submit" class="btn">Enroll Student(s)</button>
+                    </form>
+                </div>
+                
+                <div id="list-tab" class="tab-content">
+                    <form method="POST" action="/course/enroll-student">
+                        <input type="hidden" name="course_id" id="course_id_list">
+                        <div class="form-group">
+                            <label for="course_select_list">Select Course</label>
+                            <select id="course_select_list" onchange="updateCourseId('course_select_list', 'course_id_list')" required>
+                                <option value="">-- Select a Course --</option>
+                                <!-- Courses will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="student_id">Select Student</label>
+                            <select id="student_id" name="student_id" required>
+                                <option value="">-- Select a Student --</option>
+                                <!-- Students will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <button type="submit" class="btn">Enroll Student</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- History Section -->
         <div class="content-section" id="history-section">
             <h2>History</h2>
@@ -504,12 +632,6 @@
     </div>
 
     <script>
-        // Toggle account submenu
-        document.querySelector('[data-target="account"]').addEventListener('click', function(e) {
-            e.preventDefault();
-            document.getElementById('account-submenu').classList.toggle('show');
-        });
-
         // Navigation between sections
         document.querySelectorAll('.menu-item').forEach(item => {
             item.addEventListener('click', function(e) {
@@ -616,6 +738,209 @@
             document.getElementById('new-message-form').style.display = 'none';
             document.getElementById('new-message-btn').style.display = 'block';
         });
+
+        // Function to update course ID in hidden field
+        function updateCourseId(selectId, hiddenId) {
+            const selectElement = document.getElementById(selectId);
+            const hiddenElement = document.getElementById(hiddenId);
+            hiddenElement.value = selectElement.value;
+        }
+
+        // Function to fetch courses for the professor
+        function fetchProfessorCourses() {
+            // This is a placeholder - you would need to implement an API endpoint
+            // to fetch the professor's courses and populate the select elements
+            const courseSelects = document.querySelectorAll('#course_select_email, #course_select_list');
+            
+            // Example of how you might populate the selects
+            const dummyCourses = [
+                { id: 1, title: 'Introduction to Computer Science' },
+                { id: 2, title: 'Data Structures and Algorithms' },
+                { id: 3, title: 'Web Development' }
+            ];
+            
+            courseSelects.forEach(select => {
+                dummyCourses.forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course.id;
+                    option.textContent = course.title;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // Call this function when the page loads
+        if (document.querySelector('.menu-item[data-target="manage-users"]')) {
+            fetchProfessorCourses();
+        }
+
+        // Function to show/hide tabs in the manage users section
+        function showTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Deactivate all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show the selected tab content
+            document.getElementById(tabId).classList.add('active');
+            
+            // Activate the clicked tab
+            if (tabId === 'email-tab') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+            }
+        }
     </script>
-</body>
-</html>
+}
+
+<!-- Create Course Section -->
+<div class="content-section" id="create-course-section">
+    <h2>Create New Course</h2>
+    <div class="container">
+        <form method="POST" action="/course/create">
+            <div class="form-group">
+                <label for="title">Course Title</label>
+                <input type="text" id="title" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="term">Term</label>
+                <input type="text" id="term" name="term" placeholder="e.g., Fall 2023" required>
+            </div>
+            <div class="form-group">
+                <label for="syllabus">Syllabus</label>
+                <textarea id="syllabus" name="syllabus"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status" required>
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                    <option value="closed">Closed</option>
+                </select>
+            </div>
+            <button type="submit" class="btn">Create Course</button>
+        </form>
+    </div>
+</div>
+
+<!-- Manage Users Section -->
+<div class="content-section" id="manage-users-section">
+    <h2>Manage Users</h2>
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('email-tab')">Enroll by Email</div>
+            <div class="tab" onclick="showTab('list-tab')">Enroll from List</div>
+        </div>
+        
+        <div id="email-tab" class="tab-content active">
+            <form method="POST" action="/enroll-by-email">
+                <input type="hidden" name="course_id" id="course_id_email">
+                <div class="form-group">
+                    <label for="course_select_email">Select Course</label>
+                    <select id="course_select_email" onchange="updateCourseId('course_select_email', 'course_id_email')" required>
+                        <option value="">-- Select a Course --</option>
+                        <!-- Courses will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="student_email">Student Email</label>
+                    <input type="email" id="student_email" name="student_email">
+                </div>
+                <div class="form-group">
+                    <label for="multiple_emails">Or Enter Multiple Emails (one per line)</label>
+                    <textarea id="multiple_emails" name="multiple_emails" placeholder="student1@example.com&#10;student2@example.com&#10;student3@example.com"></textarea>
+                </div>
+                <button type="submit" class="btn">Enroll Student(s)</button>
+            </form>
+        </div>
+        
+        <div id="list-tab" class="tab-content">
+            <form method="POST" action="/course/enroll-student">
+                <input type="hidden" name="course_id" id="course_id_list">
+                <div class="form-group">
+                    <label for="course_select_list">Select Course</label>
+                    <select id="course_select_list" onchange="updateCourseId('course_select_list', 'course_id_list')" required>
+                        <option value="">-- Select a Course --</option>
+                        <!-- Courses will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="student_id">Select Student</label>
+                    <select id="student_id" name="student_id" required>
+                        <option value="">-- Select a Student --</option>
+                        <!-- Students will be populated by JavaScript -->
+                    </select>
+                </div>
+                <button type="submit" class="btn">Enroll Student</button>
+            </form>
+        </div>
+    </div>
+}
+
+// Function to update course ID in hidden field
+function updateCourseId(selectId, hiddenId) {
+    const selectElement = document.getElementById(selectId);
+    const hiddenElement = document.getElementById(hiddenId);
+    hiddenElement.value = selectElement.value;
+}
+
+// Function to fetch courses for the professor
+function fetchProfessorCourses() {
+    // This is a placeholder - you would need to implement an API endpoint
+    // to fetch the professor's courses and populate the select elements
+    const courseSelects = document.querySelectorAll('#course_select_email, #course_select_list');
+    
+    // Example of how you might populate the selects
+    const dummyCourses = [
+        { id: 1, title: 'Introduction to Computer Science' },
+        { id: 2, title: 'Data Structures and Algorithms' },
+        { id: 3, title: 'Web Development' }
+    ];
+    
+    courseSelects.forEach(select => {
+        dummyCourses.forEach(course => {
+            const option = document.createElement('option');
+            option.value = course.id;
+            option.textContent = course.title;
+            select.appendChild(option);
+        });
+    });
+}
+
+// Call this function when the page loads
+if (document.querySelector('.menu-item[data-target="manage-users"]')) {
+    fetchProfessorCourses();
+}
+
+// Function to show/hide tabs in the manage users section
+function showTab(tabId) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Deactivate all tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show the selected tab content
+    document.getElementById(tabId).classList.add('active');
+    
+    // Activate the clicked tab
+    if (tabId === 'email-tab') {
+        document.querySelectorAll('.tab')[0].classList.add('active');
+    } else {
+        document.querySelectorAll('.tab')[1].classList.add('active');
+    }
+}

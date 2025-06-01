@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enroll Students</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="email"], select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 150px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .student-list {
+            margin-top: 20px;
+        }
+        .student-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .student-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enroll Students in {{.Course.Title}}</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('email-tab')">Enroll by Email</div>
+            <div class="tab" onclick="showTab('list-tab')">Enroll from List</div>
+        </div>
+        
+        <div id="email-tab" class="tab-content active">
+            <form method="POST" action="/enroll-by-email">
+                <input type="hidden" name="course_id" value="{{.Course.ID}}">
+                <div class="form-group">
+                    <label for="student_email">Student Email</label>
+                    <input type="email" id="student_email" name="student_email" required>
+                </div>
+                <div class="form-group">
+                    <label for="multiple_emails">Or Enter Multiple Emails (one per line)</label>
+                    <textarea id="multiple_emails" name="multiple_emails" placeholder="student1@example.com&#10;student2@example.com&#10;student3@example.com"></textarea>
+                </div>
+                <button type="submit">Enroll Student(s)</button>
+            </form>
+        </div>
+        
+        <div id="list-tab" class="tab-content">
+            <form method="POST">
+                <input type="hidden" name="course_id" value="{{.Course.ID}}">
+                <div class="form-group">
+                    <label for="student_id">Select Student</label>
+                    <select id="student_id" name="student_id" required>
+                        <option value="">-- Select a Student --</option>
+                        {{range .Students}}
+                        <option value="{{.ID}}">{{.Username}} ({{.Email}})</option>
+                        {{end}}
+                    </select>
+                </div>
+                <button type="submit">Enroll Student</button>
+            </form>
+            
+            <div class="student-list">
+                <h3>Available Students</h3>
+                {{range .Students}}
+                <div class="student-item">
+                    <strong>{{.Username}}</strong> - {{.Email}}
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Deactivate all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show the selected tab content
+            document.getElementById(tabId).classList.add('active');
+            
+            // Activate the clicked tab
+            if (tabId === 'email-tab') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
