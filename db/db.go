@@ -33,6 +33,11 @@ func Init() {
 		&models.Discussion{},
 		&models.DiscussionReply{},
 		&models.Message{},
+		&models.Event{},
+		&models.Quiz{},
+		&models.Question{},
+		&models.QuizSubmission{},
+		&models.QuizAnswer{},
 	)
 
 	fmt.Println("Database connected and migrated.")

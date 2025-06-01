@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Management System - Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: #35424a;
+            color: white;
+            padding-top: 20px;
+            position: fixed;
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+        
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .sidebar-menu {
+            padding: 0;
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .sidebar-menu a {
+            display: block;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: #e8491d;
+        }
+        
+        .sidebar-menu i {
+            margin-right: 10px;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .welcome-banner {
+            background: #e8491d;
+            color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        /* Calendar Styles */
+        .calendar {
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .calendar-nav button {
+            background: #35424a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        
+        .calendar-day {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #eee;
+        }
+        
+        .calendar-day.header {
+            font-weight: bold;
+            background-color: #f4f4f4;
+        }
+        
+        /* Event styles */
+        .event-list {
+            margin-top: 20px;
+        }
+        
+        .event-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .event-item h4 {
+            margin-top: 0;
+            color: #35424a;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: #e8491d;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>LMS Dashboard</h2>
+            <p>Welcome, {{.User.Username}}</p>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="/dashboard?email={{.User.Email}}">Dashboard</a></li>
+            <li><a href="/dashboard?email={{.User.Email}}#courses-section">Courses</a></li>
+            <li><a href="#" class="active">Calendar</a></li>
+            <li><a href="/dashboard?email={{.User.Email}}#inbox-section">Inbox</a></li>
+            
+            <!-- Professor-specific menu items -->
+            {{if .IsProfessor}}
+            <li><a href="/course/create?email={{.User.Email}}">Create Course</a></li>
+            <li><a href="/dashboard?email={{.User.Email}}#manage-users-section">Manage Users</a></li>
+            <li><a href="/dashboard?email={{.User.Email}}#analytics-section">Analytics</a></li>
+            {{end}}
+            
+            <!-- TA-specific menu items -->
+            {{if .IsTA}}
+            <li><a href="/dashboard?email={{.User.Email}}#assignments-section">Grade Assignments</a></li>
+            {{end}}
+            
+            <li><a href="/signout">Sign Out</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="welcome-banner">
+            <h1>Your Calendar</h1>
+            <p>View and manage all your course events, assignments, and quizzes in one place.</p>
+        </div>
+
+        <!-- Calendar Section -->
+        <div class="calendar">
+            <div class="calendar-header">
+                <h3 id="current-month">September 2023</h3>
+                <div class="calendar-nav">
+                    <button id="prev-month">Previous</button>
+                    <button id="next-month">Next</button>
+                </div>
+            </div>
+            <div class="calendar-grid" id="calendar-grid">
+                <!-- Calendar days will be generated by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Upcoming Events List -->
+        <h2>Upcoming Events</h2>
+        
+        <!-- Assignments -->
+        <h3>Assignments</h3>
+        <div class="event-list" id="assignments-list">
+            {{range .Assignments}}
+            <div class="event-item">
+                <h4>{{.Title}}</h4>
+                <p>Course: {{.CourseID}} | Due: {{.DueDate.Format "Jan 02, 2006 at 3:04 PM"}}</p>
+                <p>Points: {{.PointsValue}}</p>
+            </div>
+            {{else}}
+            <p>No upcoming assignments.</p>
+            {{end}}
+        </div>
+        
+        <!-- Quizzes -->
+        <h3>Quizzes</h3>
+        <div class="event-list" id="quizzes-list">
+            {{range .Quizzes}}
+            <div class="event-item">
+                <h4>{{.Title}}</h4>
+                <p>Course: {{.CourseID}} | Due: {{.DueDate.Format "Jan 02, 2006 at 3:04 PM"}}</p>
+                <p>Points: {{.PointsValue}} | Time Limit: {{.TimeLimit}} minutes</p>
+            </div>
+            {{else}}
+            <p>No upcoming quizzes.</p>
+            {{end}}
+        </div>
+        
+        <!-- Events -->
+        <h3>Events</h3>
+        <div class="event-list" id="events-list">
+            {{range .Events}}
+            <div class="event-item">
+                <h4>{{.Title}}</h4>
+                <p>Course: {{.CourseID}} | {{.StartTime.Format "Jan 02, 2006 at 3:04 PM"}} - {{.EndTime.Format "3:04 PM"}}</p>
+                <p>{{.Description}}</p>
+                <p>Location: {{.Location}}</p>
+            </div>
+            {{else}}
+            <p>No upcoming events.</p>
+            {{end}}
+        </div>
+    </div>
+
+    <script>
+        // Calendar functionality
+        const calendarGrid = document.getElementById('calendar-grid');
+        const currentMonthElement = document.getElementById('current-month');
+        const prevMonthButton = document.getElementById('prev-month');
+        const nextMonthButton = document.getElementById('next-month');
+        
+        let currentDate = new Date();
+        
+        function renderCalendar() {
+            calendarGrid.innerHTML = '';
+            
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            currentMonthElement.textContent = new Date(year, month, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+            
+            // Add day headers
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            days.forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('calendar-day', 'header');
+                dayElement.textContent = day;
+                calendarGrid.appendChild(dayElement);
+            });
+            
+            // Get the first day of the month
+            const firstDay = new Date(year, month, 1).getDay();
+            
+            // Get the number of days in the month
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('calendar-day');
+                calendarGrid.appendChild(emptyDay);
+            }
+            
+            // Add days of the month
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('calendar-day');
+                dayElement.textContent = i;
+                
+                // Highlight today's date
+                const today = new Date();
+                if (year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) {
+                    dayElement.style.backgroundColor = '#e8491d';
+                    dayElement.style.color = 'white';
+                    dayElement.style.fontWeight = 'bold';
+                }
+                
+                calendarGrid.appendChild(dayElement);
+            }
+        }
+        
+        // Initialize calendar
+        renderCalendar();
+        
+        // Previous month button
+        prevMonthButton.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+        
+        // Next month button
+        nextMonthButton.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+    </script>
+</body>
+</html>

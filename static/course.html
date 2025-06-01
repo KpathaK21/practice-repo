@@ -239,25 +239,26 @@
         <div class="sidebar-header">
             <h2>LMS Dashboard</h2>
         </div>
+        <!-- Replace the main sidebar menu links (around line 240-250) with these: -->
         <ul class="sidebar-menu">
-            <li><a href="/dashboard?email={{.User.Email}}">Dashboard</a></li>
-            <li><a href="/dashboard?email={{.User.Email}}#courses-section">Courses</a></li>
-            <li><a href="/calendar?email={{.User.Email}}">Calendar</a></li>
-            <li><a href="/dashboard?email={{.User.Email}}#inbox-section">Inbox</a></li>
-            
-            <!-- Professor-specific menu items -->
-            {{if .IsProfessor}}
-            <li><a href="/course/create?email={{.User.Email}}">Create Course</a></li>
-            <li><a href="/dashboard?email={{.User.Email}}#manage-users-section">Manage Users</a></li>
-            <li><a href="/dashboard?email={{.User.Email}}#analytics-section">Analytics</a></li>
-            {{end}}
-            
-            <!-- TA-specific menu items -->
-            {{if .IsTA}}
-            <li><a href="/dashboard?email={{.User.Email}}#assignments-section">Grade Assignments</a></li>
-            {{end}}
-            
-            <li><a href="/">Logout</a></li>
+        <li><a href="/dashboard?email={{.User.Email}}" onclick="window.location.href='/dashboard?email={{.User.Email}}'; return false;">Dashboard</a></li>
+        <li><a href="/dashboard?email={{.User.Email}}#courses-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#courses-section'; return false;">Courses</a></li>
+        <li><a href="/calendar?email={{.User.Email}}" onclick="window.location.href='/calendar?email={{.User.Email}}'; return true;">Calendar</a></li>
+        <li><a href="/dashboard?email={{.User.Email}}#inbox-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#inbox-section'; return false;">Inbox</a></li>
+        
+        <!-- Professor-specific menu items -->
+        {{if .IsProfessor}}
+        <li><a href="/course/create?email={{.User.Email}}" onclick="window.location.href='/course/create?email={{.User.Email}}'; return false;">Create Course</a></li>
+        <li><a href="/dashboard?email={{.User.Email}}#manage-users-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#manage-users-section'; return false;">Manage Users</a></li>
+        <li><a href="/dashboard?email={{.User.Email}}#analytics-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#analytics-section'; return false;">Analytics</a></li>
+        {{end}}
+        
+        <!-- TA-specific menu items -->
+        {{if .IsTA}}
+        <li><a href="/dashboard?email={{.User.Email}}#assignments-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#assignments-section'; return false;">Grade Assignments</a></li>
+        {{end}}
+        
+        <li><a href="/" onclick="window.location.href='/'; return false;">Logout</a></li>
         </ul>
     </div>
 
@@ -618,27 +619,37 @@
     </div>
 
     <script>
+        document.querySelectorAll('.sidebar-menu a').forEach(item => {
+            item.addEventListener('click', function(e) {
+                // Force the navigation to happen by using the href attribute
+                window.location.href = this.getAttribute('href');
+                return false; // Prevent default and then handle navigation manually
+            });
+        });
         // Toggle active class for course sub-sidebar menu items ONLY
         document.querySelectorAll('.course-sidebar-menu a').forEach(item => {
             item.addEventListener('click', function(e) {
-                e.preventDefault(); // This prevents the default link behavior
-                
-                // Remove active class from all menu items
-                document.querySelectorAll('.course-sidebar-menu a').forEach(i => {
-                    i.classList.remove('active');
-                });
-                
-                // Add active class to clicked menu item
-                this.classList.add('active');
-                
-                // Hide all content sections
-                document.querySelectorAll('.content-section').forEach(section => {
-                    section.classList.remove('active');
-                });
-                
-                // Show the corresponding content section
-                const target = this.getAttribute('data-target');
-                document.getElementById(target + '-section').classList.add('active');
+                // Only prevent default for course sub-sidebar links that have data-target attribute
+                if (this.getAttribute('data-target')) {
+                    e.preventDefault(); // This prevents the default link behavior
+                    
+                    // Remove active class from all menu items
+                    document.querySelectorAll('.course-sidebar-menu a').forEach(i => {
+                        i.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked menu item
+                    this.classList.add('active');
+                    
+                    // Hide all content sections
+                    document.querySelectorAll('.content-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // Show the corresponding content section
+                    const target = this.getAttribute('data-target');
+                    document.getElementById(target + '-section').classList.add('active');
+                }
             });
         });
         
@@ -655,15 +666,6 @@
                     content.classList.add('active');
                     icon.textContent = '-';
                 }
-            });
-        });
-
-        // Make sure main sidebar links work correctly
-        document.querySelectorAll('.sidebar-menu a').forEach(item => {
-            // No event.preventDefault() here, so links will work normally
-            item.addEventListener('click', function() {
-                // Just let the link navigate normally
-                return true;
             });
         });
     </script>

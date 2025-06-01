@@ -1706,5 +1706,79 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 
 // ViewCalendar - For users to view their calendar
 func ViewCalendar(w http.ResponseWriter, r *http.Request) {
-	// Implementation for viewing calendar events
+	// Get user from session
+	email := r.URL.Query().Get("email")
+	var user models.User
+	if err := db.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		http.Redirect(w, r, "/signin", http.StatusSeeOther)
+		return
+	}
+
+	// Get all courses the user is associated with
+	var courses []models.Course
+	switch {
+	case user.IsProfessor():
+		// Professors see courses they teach
+		db.DB.Where("professor_id = ?", user.ID).Find(&courses)
+	case user.IsTA():
+		// TAs see courses they assist with
+		db.DB.Joins("JOIN course_assistants ON course_assistants.course_id = courses.id").Where("course_assistants.user_id = ?", user.ID).Find(&courses)
+	default: // Students
+		// Students see courses they're enrolled in
+		db.DB.Joins("JOIN user_courses ON user_courses.course_id = courses.id").Where("user_courses.user_id = ?", user.ID).Find(&courses)
+	}
+
+	// Get all events, assignments, and quizzes for these courses
+	var events []models.Event
+	var assignments []models.Assignment
+	var quizzes []models.Quiz
+
+	for _, course := range courses {
+		// Get events for this course
+		var courseEvents []models.Event
+		db.DB.Where("course_id = ?", course.ID).Find(&courseEvents)
+		events = append(events, courseEvents...)
+
+		// Get assignments for this course
+		var courseAssignments []models.Assignment
+		db.DB.Where("course_id = ?", course.ID).Find(&courseAssignments)
+		assignments = append(assignments, courseAssignments...)
+
+		// Get quizzes for this course
+		var courseQuizzes []models.Quiz
+		db.DB.Where("course_id = ?", course.ID).Find(&courseQuizzes)
+		quizzes = append(quizzes, courseQuizzes...)
+	}
+
+	// Create a data structure to pass to the template
+    data := struct {
+        User        models.User
+        Username    string
+        Role        string
+        IsProfessor bool
+        IsTA        bool
+        IsStudent   bool
+        Courses     []models.Course
+        Events      []models.Event
+        Assignments []models.Assignment
+        Quizzes     []models.Quiz
+    }{
+        User:        user,
+        Username:    user.Username,
+        Role:        user.Role,
+        IsProfessor: user.IsProfessor(),
+        IsTA:        user.IsTA(),
+        IsStudent:   user.IsStudent(),
+        Courses:     courses,
+        Events:      events,
+        Assignments: assignments,
+        Quizzes:     quizzes,
+    }
+
+	// Force a clean render of the calendar template
+	tmpl := template.Must(template.ParseFiles("static/calendar.html"))
+	if err := tmpl.Execute(w, data); err != nil {
+		http.Error(w, "Error rendering calendar template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
