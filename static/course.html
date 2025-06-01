@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Course.Title}} - Learning Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Main Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: #35424a;
+            color: white;
+            padding-top: 20px;
+            position: fixed;
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-menu a {
+            display: block;
+            padding: 10px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: #e8491d;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+            display: flex;
+        }
+        
+        /* Course Sub-Sidebar Styles */
+        .course-sidebar {
+            width: 200px;
+            background-color: #f0f0f0;
+            border-right: 1px solid #ddd;
+            padding: 20px 0;
+            margin-right: 20px;
+        }
+        
+        .course-sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .course-sidebar-menu li {
+            margin-bottom: 5px;
+        }
+        
+        .course-sidebar-menu a {
+            display: block;
+            padding: 10px 20px;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .course-sidebar-menu a:hover, .course-sidebar-menu a.active {
+            background-color: #e8e8e8;
+            border-left: 3px solid #e8491d;
+        }
+        
+        /* Course Content Styles */
+        .course-content {
+            flex: 1;
+        }
+        
+        .welcome-banner {
+            background: #e8491d;
+            color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .content-section {
+            display: none;
+            margin-bottom: 30px;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .card h3 {
+            margin-top: 0;
+            color: #35424a;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: #e8491d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background-color: #d43d11;
+        }
+        
+        /* Module styles */
+        .module {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .module-header {
+            background-color: #f0f0f0;
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .module-content {
+            padding: 15px;
+            display: none;
+        }
+        
+        .module-content.active {
+            display: block;
+        }
+        
+        .material-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .material-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Discussion styles */
+        .discussion-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .discussion-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .discussion-item h4 {
+            margin-top: 0;
+        }
+        
+        /* Assignment styles */
+        .assignment-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .assignment-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .assignment-item .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+        
+        .status-pending {
+            background-color: #ffeeba;
+            color: #856404;
+        }
+        
+        .status-submitted {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-late {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>LMS Dashboard</h2>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="/dashboard?email={{.User.Email}}">Dashboard</a></li>
+            <li><a href="/dashboard?email={{.User.Email}}#courses-section">Courses</a></li>
+            <li><a href="/calendar?email={{.User.Email}}">Calendar</a></li>
+            <li><a href="/dashboard?email={{.User.Email}}#inbox-section">Inbox</a></li>
+            
+            <!-- Professor-specific menu items -->
+            {{if .IsProfessor}}
+            <li><a href="/course/create?email={{.User.Email}}">Create Course</a></li>
+            <li><a href="/dashboard?email={{.User.Email}}#manage-users-section">Manage Users</a></li>
+            <li><a href="/dashboard?email={{.User.Email}}#analytics-section">Analytics</a></li>
+            {{end}}
+            
+            <!-- TA-specific menu items -->
+            {{if .IsTA}}
+            <li><a href="/dashboard?email={{.User.Email}}#assignments-section">Grade Assignments</a></li>
+            {{end}}
+            
+            <li><a href="/">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Course Sub-Sidebar -->
+        <div class="course-sidebar">
+            <ul class="course-sidebar-menu">
+                <li><a href="#" class="active" data-target="home">Home</a></li>
+                <li><a href="#" data-target="modules">Modules</a></li>
+                <li><a href="#" data-target="assignments">Assignments</a></li>
+                <li><a href="#" data-target="discussions">Discussions</a></li>
+                <li><a href="#" data-target="announcements">Announcements</a></li>
+                <li><a href="#" data-target="grades">Grades</a></li>
+                <li><a href="#" data-target="people">People</a></li>
+                {{if or .IsProfessor .IsTA}}
+                <li><a href="#" data-target="settings">Settings</a></li>
+                {{end}}
+            </ul>
+        </div>
+        
+        <!-- Course Content -->
+        <div class="course-content">
+            <!-- Home Section -->
+            <div class="content-section active" id="home-section">
+                <div class="welcome-banner">
+                    <h2>{{.Course.Title}}</h2>
+                    <p>{{.Course.Term}} | {{.Course.Status}}</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Course Description</h3>
+                    <p>{{.Course.Description}}</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Syllabus</h3>
+                    <p>{{.Course.Syllabus}}</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Upcoming Deadlines</h3>
+                    <ul class="assignment-list">
+                        {{range .Course.Assignments}}
+                        <li class="assignment-item">
+                            <div>
+                                <h4>{{.Title}}</h4>
+                                <p>Due: {{.DueDate.Format "Jan 02, 2006 at 3:04 PM"}}</p>
+                            </div>
+                            <span class="status status-pending">Pending</span>
+                        </li>
+                        {{else}}
+                        <li>No upcoming deadlines</li>
+                        {{end}}
+                    </ul>
+                </div>
+                
+                <div class="card">
+                    <h3>Recent Announcements</h3>
+                    <ul class="discussion-list">
+                        {{range .Course.Announcements}}
+                        <li class="discussion-item">
+                            <h4>{{.Title}}</h4>
+                            <p>{{.Content}}</p>
+                            <small>Posted on {{.CreatedAt.Format "Jan 02, 2006"}}</small>
+                        </li>
+                        {{else}}
+                        <li>No announcements yet</li>
+                        {{end}}
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Modules Section -->
+            <div class="content-section" id="modules-section">
+                <h2>Course Modules</h2>
+                
+                {{range .Course.Materials}}
+                <div class="module">
+                    <div class="module-header">
+                        <h3>{{.Title}}</h3>
+                        <span class="toggle-icon">+</span>
+                    </div>
+                    <div class="module-content">
+                        <p>{{.Description}}</p>
+                        <div class="material-item">
+                            <span>{{.FileType}}: {{.FilePath}}</span>
+                            <a href="#" class="btn">View</a>
+                        </div>
+                    </div>
+                </div>
+                {{else}}
+                <div class="card">
+                    <p>No modules available yet.</p>
+                </div>
+                {{end}}
+                
+                {{if or .IsProfessor .IsTA}}
+                <div class="card">
+                    <h3>Add New Module</h3>
+                    <form method="POST" action="/course/create-material?course_id={{.Course.ID}}&email={{.User.Email}}">
+                        <div class="form-group">
+                            <label for="title">Title</label>
+                            <input type="text" id="title" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="file_type">File Type</label>
+                            <select id="file_type" name="file_type">
+                                <option value="pdf">PDF</option>
+                                <option value="video">Video</option>
+                                <option value="link">Link</option>
+                                <option value="text">Text</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="file_path">File Path or URL</label>
+                            <input type="text" id="file_path" name="file_path">
+                        </div>
+                        <button type="submit" class="btn">Add Module</button>
+                    </form>
+                </div>
+                {{end}}
+            </div>
+            
+            <!-- Assignments Section -->
+            <div class="content-section" id="assignments-section">
+                <h2>Assignments</h2>
+                
+                <ul class="assignment-list">
+                    {{range .Course.Assignments}}
+                    <li class="assignment-item">
+                        <div>
+                            <h4>{{.Title}}</h4>
+                            <p>{{.Description}}</p>
+                            <p>Due: {{.DueDate.Format "Jan 02, 2006 at 3:04 PM"}}</p>
+                            <p>Points: {{.PointsValue}}</p>
+                        </div>
+                        <a href="#" class="btn">View Details</a>
+                    </li>
+                    {{else}}
+                    <li>No assignments available yet.</li>
+                    {{end}}
+                </ul>
+                
+                {{if or .IsProfessor .IsTA}}
+                <div class="card">
+                    <h3>Create New Assignment</h3>
+                    <form method="POST" action="/course/create-assignment?course_id={{.Course.ID}}&email={{.User.Email}}">
+                        <div class="form-group">
+                            <label for="title">Title</label>
+                            <input type="text" id="title" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="due_date">Due Date</label>
+                            <input type="datetime-local" id="due_date" name="due_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="points">Points</label>
+                            <input type="number" id="points" name="points" min="0" step="0.1" required>
+                        </div>
+                        <button type="submit" class="btn">Create Assignment</button>
+                    </form>
+                </div>
+                {{end}}
+            </div>
+            
+            <!-- Discussions Section -->
+            <div class="content-section" id="discussions-section">
+                <h2>Discussions</h2>
+                
+                <ul class="discussion-list">
+                    {{range .Course.Discussions}}
+                    <li class="discussion-item">
+                        <h4>{{.Title}}</h4>
+                        <p>{{.Content}}</p>
+                        <small>Started by User {{.CreatedBy}} on {{.CreatedAt.Format "Jan 02, 2006"}}</small>
+                        <a href="#" class="btn">View Thread</a>
+                    </li>
+                    {{else}}
+                    <li>No discussions started yet.</li>
+                    {{end}}
+                </ul>
+                
+                <div class="card">
+                    <h3>Start New Discussion</h3>
+                    <form method="POST" action="/course/create-discussion?course_id={{.Course.ID}}&email={{.User.Email}}">
+                        <div class="form-group">
+                            <label for="title">Title</label>
+                            <input type="text" id="title" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="content">Content</label>
+                            <textarea id="content" name="content" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn">Post Discussion</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Announcements Section -->
+            <div class="content-section" id="announcements-section">
+                <h2>Announcements</h2>
+                
+                <ul class="discussion-list">
+                    {{range .Course.Announcements}}
+                    <li class="discussion-item">
+                        <h4>{{.Title}}</h4>
+                        <p>{{.Content}}</p>
+                        <small>Posted on {{.CreatedAt.Format "Jan 02, 2006"}}</small>
+                    </li>
+                    {{else}}
+                    <li>No announcements yet.</li>
+                    {{end}}
+                </ul>
+                
+                {{if or .IsProfessor .IsTA}}
+                <div class="card">
+                    <h3>Create Announcement</h3>
+                    <form method="POST" action="/course/create-announcement?course_id={{.Course.ID}}&email={{.User.Email}}">
+                        <div class="form-group">
+                            <label for="title">Title</label>
+                            <input type="text" id="title" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="content">Content</label>
+                            <textarea id="content" name="content" rows="5" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="pinned" value="true">
+                                Pin this announcement
+                            </label>
+                        </div>
+                        <button type="submit" class="btn">Post Announcement</button>
+                    </form>
+                </div>
+                {{end}}
+            </div>
+            
+            <!-- Grades Section -->
+            <div class="content-section" id="grades-section">
+                <h2>Grades</h2>
+                
+                <div class="card">
+                    {{if .IsStudent}}
+                    <h3>Your Grades</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Assignment</th>
+                                <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Due Date</th>
+                                <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Status</th>
+                                <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- This would be populated with actual grade data -->
+                            <tr>
+                                <td style="padding: 8px; border-bottom: 1px solid #ddd;">Sample Assignment</td>
+                                <td style="padding: 8px; border-bottom: 1px solid #ddd;">Oct 15, 2023</td>
+                                <td style="padding: 8px; border-bottom: 1px solid #ddd;">Submitted</td>
+                                <td style="padding: 8px; border-bottom: 1px solid #ddd;">85/100</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    {{else}}
+                    <h3>Class Grades</h3>
+                    <p>Access the gradebook to view and manage student grades.</p>
+                    <a href="#" class="btn">Open Gradebook</a>
+                    {{end}}
+                </div>
+            </div>
+            
+            <!-- People Section -->
+            <div class="content-section" id="people-section">
+                <h2>People</h2>
+                
+                <div class="card">
+                    <h3>Instructor</h3>
+                    <p>{{.Course.Professor.Username}} ({{.Course.Professor.Email}})</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Teaching Assistants</h3>
+                    <ul>
+                        {{range .Course.Assistants}}
+                        <li>{{.Username}} ({{.Email}})</li>
+                        {{else}}
+                        <li>No teaching assistants assigned</li>
+                        {{end}}
+                    </ul>
+                </div>
+                
+                <div class="card">
+                    <h3>Students</h3>
+                    <ul>
+                        {{range .Course.Students}}
+                        <li>{{.Username}} ({{.Email}})</li>
+                        {{else}}
+                        <li>No students enrolled</li>
+                        {{end}}
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Settings Section (Professor/TA only) -->
+            {{if or .IsProfessor .IsTA}}
+            <div class="content-section" id="settings-section">
+                <h2>Course Settings</h2>
+                
+                <div class="card">
+                    <h3>Edit Course Details</h3>
+                    <form method="POST" action="/course/update?id={{.Course.ID}}&email={{.User.Email}}">
+                        <div class="form-group">
+                            <label for="title">Title</label>
+                            <input type="text" id="title" name="title" value="{{.Course.Title}}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description">{{.Course.Description}}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="term">Term</label>
+                            <input type="text" id="term" name="term" value="{{.Course.Term}}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="syllabus">Syllabus</label>
+                            <textarea id="syllabus" name="syllabus">{{.Course.Syllabus}}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select id="status" name="status" required>
+                                <option value="draft" {{if eq .Course.Status "draft"}}selected{{end}}>Draft</option>
+                                <option value="published" {{if eq .Course.Status "published"}}selected{{end}}>Published</option>
+                                <option value="closed" {{if eq .Course.Status "closed"}}selected{{end}}>Closed</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="is_public" value="true" {{if .Course.IsPublic}}checked{{end}}>
+                                Make course publicly visible
+                            </label>
+                        </div>
+                        <button type="submit" class="btn">Update Course</button>
+                    </form>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+
+    <script>
+        // Toggle active class for course sub-sidebar menu items ONLY
+        document.querySelectorAll('.course-sidebar-menu a').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault(); // This prevents the default link behavior
+                
+                // Remove active class from all menu items
+                document.querySelectorAll('.course-sidebar-menu a').forEach(i => {
+                    i.classList.remove('active');
+                });
+                
+                // Add active class to clicked menu item
+                this.classList.add('active');
+                
+                // Hide all content sections
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                // Show the corresponding content section
+                const target = this.getAttribute('data-target');
+                document.getElementById(target + '-section').classList.add('active');
+            });
+        });
+        
+        // Toggle module content
+        document.querySelectorAll('.module-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const content = this.nextElementSibling;
+                const icon = this.querySelector('.toggle-icon');
+                
+                if (content.classList.contains('active')) {
+                    content.classList.remove('active');
+                    icon.textContent = '+';
+                } else {
+                    content.classList.add('active');
+                    icon.textContent = '-';
+                }
+            });
+        });
+
+        // Make sure main sidebar links work correctly
+        document.querySelectorAll('.sidebar-menu a').forEach(item => {
+            // No event.preventDefault() here, so links will work normally
+            item.addEventListener('click', function() {
+                // Just let the link navigate normally
+                return true;
+            });
+        });
+    </script>
+</body>
+</html>

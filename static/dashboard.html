@@ -415,27 +415,48 @@
         <!-- Then update the Courses Section -->
         <!-- Courses Section -->
         <div class="content-section" id="courses-section">
-            <h2>My Courses</h2>
-            <div class="dashboard-grid">
-                {{if .Courses}}
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>My Courses</h2>
+                <div class="view-controls">
+                    <button class="view-toggle active" id="card-view-btn">
+                        <i>📊</i> Card View
+                    </button>
+                    <button class="view-toggle" id="list-view-btn">
+                        <i>📋</i> List View
+                    </button>
+                </div>
+            </div>
+            
+            {{if .Courses}}
+                <!-- Card View (Default) -->
+                <div class="dashboard-grid" id="card-view">
                     {{range .Courses}}
-                        <div class="card">
+                        <div class="card clickable" onclick="window.location.href='/course/?id={{.ID}}&email={{$.Email}}'">
                             <h3>{{.Title}}</h3>
                             <p>{{.Description}}</p>
-                            <div class="card-footer">
-                                <a href="/course/?id={{.ID}}&email={{$.Email}}" class="btn">Enter Course</a>
+                        </div>
+                    {{end}}
+                </div>
+                
+                <!-- List View (Hidden by default) -->
+                <div class="dashboard-list" id="list-view" style="display: none;">
+                    {{range .Courses}}
+                        <div class="list-item" onclick="window.location.href='/course/?id={{.ID}}&email={{$.Email}}'">
+                            <div>
+                                <h3>{{.Title}}</h3>
+                                <p>{{.Description}}</p>
                             </div>
                         </div>
                     {{end}}
-                {{else}}
-                    <p>You don't have any courses yet.</p>
-                    {{if eq .Role "professor"}}
-                        <p>Click on "Create Course" in the sidebar to create your first course.</p>
-                    {{else if eq .Role "student"}}
-                        <p>Contact your professor for enrollment information.</p>
-                    {{end}}
+                </div>
+            {{else}}
+                <p>You don't have any courses yet.</p>
+                {{if eq .Role "professor"}}
+                    <p>Click on "Create Course" in the sidebar to create your first course.</p>
+                {{else if eq .Role "student"}}
+                    <p>Contact your professor for enrollment information.</p>
                 {{end}}
-            </div>
+            {{end}}
         </div>
 
         <!-- Calendar Section -->
@@ -659,6 +680,38 @@
                 }
             });
         });
+        
+        // View toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const cardViewBtn = document.getElementById('card-view-btn');
+            const listViewBtn = document.getElementById('list-view-btn');
+            const cardView = document.getElementById('card-view');
+            const listView = document.getElementById('list-view');
+            
+            if (cardViewBtn && listViewBtn) {
+                cardViewBtn.addEventListener('click', function() {
+                    cardView.style.display = 'grid';
+                    listView.style.display = 'none';
+                    cardViewBtn.classList.add('active');
+                    listViewBtn.classList.remove('active');
+                    localStorage.setItem('courseViewPreference', 'card');
+                });
+                
+                listViewBtn.addEventListener('click', function() {
+                    cardView.style.display = 'none';
+                    listView.style.display = 'flex';
+                    listViewBtn.classList.add('active');
+                    cardViewBtn.classList.remove('active');
+                    localStorage.setItem('courseViewPreference', 'list');
+                });
+                
+                // Check for saved preference
+                const savedView = localStorage.getItem('courseViewPreference');
+                if (savedView === 'list') {
+                    listViewBtn.click();
+                }
+            }
+        });
 
         // Calendar functionality
         const calendarGrid = document.getElementById('calendar-grid');
@@ -856,6 +909,77 @@
     </div>
 }
 
+/* Clickable card styles */
+.card.clickable {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+.card.clickable:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* View toggle styles */
+.view-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+}
+
+.view-toggle {
+    background: #35424a;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.view-toggle.active {
+    background: #e8491d;
+}
+
+.view-toggle i {
+    margin-right: 5px;
+}
+
+/* List view styles */
+.dashboard-list {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dashboard-list .list-item {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.dashboard-list .list-item:hover {
+    background-color: #f9f9f9;
+}
+
+.dashboard-list .list-item h3 {
+    margin: 0;
+    color: #35424a;
+}
+
+.dashboard-list .list-item p {
+    margin: 5px 0 0;
+    color: #666;
+}
 // Function to update course ID in hidden field
 function updateCourseId(selectId, hiddenId) {
     const selectElement = document.getElementById(selectId);
