@@ -1754,6 +1754,7 @@ func ViewCalendar(w http.ResponseWriter, r *http.Request) {
     data := struct {
         User        models.User
         Username    string
+        Email       string
         Role        string
         IsProfessor bool
         IsTA        bool
@@ -1765,6 +1766,7 @@ func ViewCalendar(w http.ResponseWriter, r *http.Request) {
     }{
         User:        user,
         Username:    user.Username,
+        Email:       user.Email,
         Role:        user.Role,
         IsProfessor: user.IsProfessor(),
         IsTA:        user.IsTA(),

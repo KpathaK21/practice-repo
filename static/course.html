@@ -241,21 +241,21 @@
         </div>
         <!-- Replace the main sidebar menu links (around line 240-250) with these: -->
         <ul class="sidebar-menu">
-        <li><a href="/dashboard?email={{.User.Email}}" onclick="window.location.href='/dashboard?email={{.User.Email}}'; return false;">Dashboard</a></li>
-        <li><a href="/dashboard?email={{.User.Email}}#courses-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#courses-section'; return false;">Courses</a></li>
+        <li><a href="/dashboard?email={{.User.Email}}" onclick="window.location.href='/dashboard?email={{.User.Email}}'; return true;">Dashboard</a></li>
+        <li><a href="/dashboard?email={{.User.Email}}#courses-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#courses-section'; return true;">Courses</a></li>
         <li><a href="/calendar?email={{.User.Email}}" onclick="window.location.href='/calendar?email={{.User.Email}}'; return true;">Calendar</a></li>
-        <li><a href="/dashboard?email={{.User.Email}}#inbox-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#inbox-section'; return false;">Inbox</a></li>
+        <li><a href="/dashboard?email={{.User.Email}}#inbox-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#inbox-section'; return true;">Inbox</a></li>
         
         <!-- Professor-specific menu items -->
         {{if .IsProfessor}}
-        <li><a href="/course/create?email={{.User.Email}}" onclick="window.location.href='/course/create?email={{.User.Email}}'; return false;">Create Course</a></li>
-        <li><a href="/dashboard?email={{.User.Email}}#manage-users-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#manage-users-section'; return false;">Manage Users</a></li>
-        <li><a href="/dashboard?email={{.User.Email}}#analytics-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#analytics-section'; return false;">Analytics</a></li>
+        <li><a href="/course/create?email={{.User.Email}}" onclick="window.location.href='/course/create?email={{.User.Email}}'; return true;">Create Course</a></li>
+        <li><a href="/dashboard?email={{.User.Email}}#manage-users-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#manage-users-section'; return true;">Manage Users</a></li>
+        <li><a href="/dashboard?email={{.User.Email}}#analytics-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#analytics-section'; return true;">Analytics</a></li>
         {{end}}
         
         <!-- TA-specific menu items -->
         {{if .IsTA}}
-        <li><a href="/dashboard?email={{.User.Email}}#assignments-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#assignments-section'; return false;">Grade Assignments</a></li>
+        <li><a href="/dashboard?email={{.User.Email}}#assignments-section" onclick="window.location.href='/dashboard?email={{.User.Email}}#assignments-section'; return true;">Grade Assignments</a></li>
         {{end}}
         
         <li><a href="/" onclick="window.location.href='/'; return false;">Logout</a></li>

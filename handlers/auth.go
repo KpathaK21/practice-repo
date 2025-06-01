@@ -241,6 +241,7 @@ func renderVerifyError(w http.ResponseWriter, message string) {
 	})
 }
 
+// Update the SignIn function to use JWT
 func SignIn(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		tmpl := template.Must(template.ParseFiles("static/signin.html"))
@@ -272,8 +273,18 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Redirect to dashboard with email parameter
-	http.Redirect(w, r, "/dashboard?email="+email, http.StatusSeeOther)
+	// Generate JWT tokens
+	td, err := CreateToken(user)
+	if err != nil {
+		renderSigninError(w, "Error generating authentication token")
+		return
+	}
+
+	// Set token cookies
+	SetTokenCookies(w, td)
+
+	// Redirect to dashboard
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
 func renderSigninError(w http.ResponseWriter, message string) {
@@ -282,36 +293,40 @@ func renderSigninError(w http.ResponseWriter, message string) {
 }
 
 // Update the Dashboard handler to serve different templates based on user role
+// Update the Dashboard handler to use JWT
 func Dashboard(w http.ResponseWriter, r *http.Request) {
-	// In a real application, you would get the user from the session
-	// For this example, we'll get the user from the email parameter
-	email := r.URL.Query().Get("email")
+	// Get user claims from context
+	claims, ok := r.Context().Value("user").(*AccessTokenClaims)
+	if !ok {
+		http.Redirect(w, r, "/signin", http.StatusSeeOther)
+		return
+	}
+
+	// Get user from database
+	var user models.User
+	if err := db.DB.Where("id = ?", claims.UserID).First(&user).Error; err != nil {
+		http.Redirect(w, r, "/signin", http.StatusSeeOther)
+		return
+	}
+
+	username := user.Username
+	role := user.Role
+	email := user.Email
 	message := r.URL.Query().Get("message") // Get message from query parameter
 
-	var user models.User
-	var username string = "User" // Default username if not found
-	var role string = "student"  // Default role
-	var courses []models.Course  // To store user's courses
+	var courses []models.Course
 
-	// If email is provided, try to find the user
-	if email != "" {
-		if err := db.DB.Where("email = ?", email).First(&user).Error; err == nil {
-			username = user.Username
-			role = user.Role
-
-			// Fetch courses based on user role
-			switch role {
-			case "professor":
-				// Get courses where user is the professor
-				db.DB.Where("professor_id = ?", user.ID).Find(&courses)
-			case "ta":
-				// Get courses where user is a TA
-				db.DB.Table("courses").Joins("JOIN course_assistants ON courses.id = course_assistants.course_id").Where("course_assistants.user_id = ?", user.ID).Find(&courses)
-			case "student":
-				// Get courses where user is enrolled
-				db.DB.Table("courses").Joins("JOIN user_courses ON courses.id = user_courses.course_id").Where("user_courses.user_id = ?", user.ID).Find(&courses)
-			}
-		}
+	// Fetch courses based on user role
+	switch role {
+	case "professor":
+		// Get courses where user is the professor
+		db.DB.Where("professor_id = ?", user.ID).Find(&courses)
+	case "ta":
+		// Get courses where user is a TA
+		db.DB.Table("courses").Joins("JOIN course_assistants ON courses.id = course_assistants.course_id").Where("course_assistants.user_id = ?", user.ID).Find(&courses)
+	case "student":
+		// Get courses where user is enrolled
+		db.DB.Table("courses").Joins("JOIN user_courses ON courses.id = user_courses.course_id").Where("user_courses.user_id = ?", user.ID).Find(&courses)
 	}
 
 	// Pass the username, role, email, courses, and message to the template
@@ -474,4 +489,70 @@ func sendEmail(to, subject, body string) error {
 	fmt.Println("Response Headers:", response.Headers)
 
 	return nil
+}
+
+// RefreshToken handles token refresh requests
+func RefreshToken(w http.ResponseWriter, r *http.Request) {
+	// Extract refresh token from cookie
+	cookie, err := r.Cookie("refresh_token")
+	if err != nil {
+		http.Error(w, "Refresh token not found", http.StatusUnauthorized)
+		return
+	}
+
+	refreshToken := cookie.Value
+
+	// Verify the refresh token
+	claims, err := VerifyRefreshToken(refreshToken)
+	if err != nil {
+		http.Error(w, "Invalid refresh token", http.StatusUnauthorized)
+		return
+	}
+
+	// Get the user from the database
+	var user models.User
+	if err := db.DB.First(&user, claims.UserID).Error; err != nil {
+		http.Error(w, "User not found", http.StatusUnauthorized)
+		return
+	}
+
+	// Create new tokens
+	td, err := CreateToken(user)
+	if err != nil {
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		return
+	}
+
+	// Set the new tokens as cookies
+	SetTokenCookies(w, td)
+
+	// Return success response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, `{"status":"success","message":"Token refreshed successfully"}`)
+}
+
+// 7. Add Logout Handler
+
+// Logout handles user logout
+func Logout(w http.ResponseWriter, r *http.Request) {
+	// Clear the token cookies
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
+
+	// Redirect to login page
+	http.Redirect(w, r, "/signin", http.StatusSeeOther)
 }
