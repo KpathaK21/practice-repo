@@ -296,6 +296,17 @@
                 <p>Track your progress, access your courses, and manage your learning journey all in one place.</p>
             </div>
 
+            <!-- Add Zoom connection button for professors -->
+            {{if eq .Role "professor"}}
+            <div class="card" style="margin-bottom: 20px;">
+                <h3>Zoom Integration</h3>
+                <p>Connect your Zoom account to schedule virtual meetings for your courses.</p>
+                <div class="card-footer">
+                    <a href="/api/zoom/auth" class="btn">Connect Zoom Account</a>
+                </div>
+            </div>
+            {{end}}
+
             <!-- Role-specific dashboard content -->
             {{if eq .Role "professor"}}
             <h3>Professor Dashboard</h3>

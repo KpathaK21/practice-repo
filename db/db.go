@@ -23,6 +23,7 @@ func Init() {
 	models.DB = DB
 
 	// Auto migrate all models
+	// Add to the AutoMigrate section
 	DB.AutoMigrate(
 		&models.User{},
 		&models.Course{},
@@ -38,6 +39,8 @@ func Init() {
 		&models.Question{},
 		&models.QuizSubmission{},
 		&models.QuizAnswer{},
+		&models.ZoomCredentials{},
+		&models.ZoomMeeting{},
 	)
 
 	fmt.Println("Database connected and migrated.")

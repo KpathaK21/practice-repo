@@ -24,7 +24,7 @@ func main() {
 	http.HandleFunc("/signin", handlers.SignIn)
 	http.HandleFunc("/verify", handlers.Verify)
 	http.HandleFunc("/refresh", handlers.RefreshToken) // New refresh token endpoint
-	http.HandleFunc("/logout", handlers.Logout)       // New logout endpoint
+	http.HandleFunc("/logout", handlers.Logout)        // New logout endpoint
 	http.HandleFunc("/dashboard", handlers.JWTMiddleware(handlers.Dashboard))
 
 	// Course routes with JWT middleware
@@ -69,6 +69,19 @@ func main() {
 	// This should be last as it's a catch-all
 	http.HandleFunc("/course/", handlers.JWTMiddleware(handlers.ViewCourse))
 
+	// Add to the imports if needed
+	// "github.com/KpathaK21/practice-repo/handlers"
+
+	// Add to the main function after initializing environment variables
+	handlers.InitZoomEnvVars()
+
+	// Add these routes after the existing routes
+	// Zoom integration routes
+	http.HandleFunc("/api/zoom/auth", handlers.ZoomAuthHandler)
+	http.HandleFunc("/zoom/callback", handlers.ZoomCallbackHandler)  // Changed from /api/zoom/callback
+	http.HandleFunc("/course/zoom/create", handlers.CourseStaffJWTMiddleware(handlers.CreateZoomMeeting))
+	http.HandleFunc("/course/zoom/list", handlers.EnrolledJWTMiddleware(handlers.ListZoomMeetings))
+	http.HandleFunc("/course/zoom/join", handlers.EnrolledJWTMiddleware(handlers.JoinZoomMeeting))
 	log.Println("Server started at http://localhost:8080")
 	http.ListenAndServe(":8080", nil)
 }

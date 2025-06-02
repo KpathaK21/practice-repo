@@ -274,6 +274,7 @@
                 <li><a href="#" data-target="announcements">Announcements</a></li>
                 <li><a href="#" data-target="grades">Grades</a></li>
                 <li><a href="#" data-target="people">People</a></li>
+                <li><a href="#" data-target="zoom">Zoom Meetings</a></li>
                 {{if or .IsProfessor .IsTA}}
                 <li><a href="#" data-target="settings">Settings</a></li>
                 {{end}}
@@ -671,3 +672,35 @@
     </script>
 </body>
 </html>
+
+<!-- Zoom Meetings Section -->
+<div class="content-section" id="zoom-section">
+    <h2>Zoom Meetings</h2>
+    
+    <div class="card">
+        <h3>Upcoming Meetings</h3>
+        <ul class="discussion-list">
+            {{range .Course.ZoomMeetings}}
+            <li class="discussion-item">
+                <h4>{{.Title}}</h4>
+                <p>{{.Description}}</p>
+                <p>Start Time: {{.StartTime.Format "Jan 02, 2006 at 3:04 PM"}}</p>
+                <p>Duration: {{.Duration}} minutes</p>
+                <p>Status: {{.Status}}</p>
+                <div>
+                    <a href="/course/zoom/join?meeting_id={{.ID}}" class="btn" target="_blank">Join Meeting</a>
+                </div>
+            </li>
+            {{else}}
+            <li>No upcoming meetings scheduled</li>
+            {{end}}
+        </ul>
+    </div>
+    
+    {{if or .IsProfessor .IsTA}}
+    <div class="card">
+        <h3>Schedule a New Meeting</h3>
+        <a href="/static/create_zoom_meeting.html?course_id={{.Course.ID}}" class="btn">Create Zoom Meeting</a>
+    </div>
+    {{end}}
+</div>

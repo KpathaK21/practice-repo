@@ -328,3 +328,20 @@ func EnrolledJWTMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r)
 	})
 }
+
+// getUserFromContext extracts the user from the request context
+func getUserFromContext(r *http.Request) (models.User, error) {
+	// Get user claims from context
+	claims, ok := r.Context().Value("user").(*AccessTokenClaims)
+	if !ok {
+		return models.User{}, fmt.Errorf("unauthorized: no user in context")
+	}
+
+	// Get user from database
+	var user models.User
+	if err := db.DB.First(&user, claims.UserID).Error; err != nil {
+		return models.User{}, fmt.Errorf("user not found: %v", err)
+	}
+
+	return user, nil
+}
