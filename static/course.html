@@ -573,6 +573,38 @@
                 </div>
             </div>
             
+            <!-- Zoom Meetings Section -->
+            <div class="content-section" id="zoom-section">
+                <h2>Zoom Meetings</h2>
+                
+                <div class="card">
+                    <h3>Scheduled Meetings</h3>
+                    {{if .ZoomMeetings}}
+                        {{range .ZoomMeetings}}
+                        <div class="meeting-card">
+                            <h4>{{.Title}}</h4>
+                            <p>{{.Description}}</p>
+                            <p><strong>Start Time:</strong> {{.StartTime.Format "Jan 02, 2006 03:04 PM"}}</p>
+                            <p><strong>Duration:</strong> {{.Duration}} minutes</p>
+                            <p><strong>Meeting ID:</strong> {{.ZoomMeetingID}}</p>
+                            {{if .Password}}<p><strong>Password:</strong> {{.Password}}</p>{{end}}
+                            <a href="{{.JoinURL}}" target="_blank" class="btn">Join Meeting</a>
+                        </div>
+                        {{end}}
+                    {{else}}
+                        <p>No meetings scheduled for this course.</p>
+                    {{end}}
+                </div>
+                
+                {{if or .IsProfessor .IsTA}}
+                <div class="card">
+                    <h3>Create Meeting</h3>
+                    <p>Schedule a new Zoom meeting for this course.</p>
+                    <a href="/course/zoom/create?id={{.Course.ID}}" class="btn">Create Zoom Meeting</a>
+                </div>
+                {{end}}
+            </div>
+            
             <!-- Settings Section (Professor/TA only) -->
             {{if or .IsProfessor .IsTA}}
             <div class="content-section" id="settings-section">
