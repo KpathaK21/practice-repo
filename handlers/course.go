@@ -991,27 +991,14 @@ func DeleteMaterial(w http.ResponseWriter, r *http.Request) {
 // CreateAssignment - For course staff to create new assignments
 func CreateAssignment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		// Get course ID from URL
+		// Redirect to course page instead of trying to render a non-existent template
 		courseIDStr := r.URL.Query().Get("course_id")
-		courseID, err := strconv.ParseUint(courseIDStr, 10, 64)
-		if err != nil {
-			http.Error(w, "Invalid Course ID", http.StatusBadRequest)
-			return
-		}
-
-		// Get course details
-		var course models.Course
-		if err := db.DB.First(&course, courseID).Error; err != nil {
-			http.Error(w, "Course not found", http.StatusNotFound)
-			return
-		}
-
-		// Render the create assignment form
-		template.Must(template.ParseFiles("static/create_assignment.html")).Execute(w, map[string]interface{}{
-			"Course": course,
-		})
+		http.Redirect(w, r, "/course?id="+courseIDStr, http.StatusSeeOther)
 		return
 	}
+
+	// Parse form data - MOVED THIS LINE UP
+	r.ParseForm()
 
 	// Get user from session
 	email := r.URL.Query().Get("email")
@@ -1035,11 +1022,8 @@ func CreateAssignment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse form data
-	r.ParseForm()
-
 	// Parse points value
-	pointsValue, err := strconv.ParseFloat(r.FormValue("points_value"), 64)
+	pointsValue, err := strconv.ParseFloat(r.FormValue("points"), 64)
 	if err != nil {
 		pointsValue = 0
 	}
@@ -1051,9 +1035,29 @@ func CreateAssignment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse due date
-	dueDate, err := time.Parse("2006-01-02T15:04", r.FormValue("due_date"))
+	dueDate, err := time.Parse("2006-01-02T15:04:05", r.FormValue("due_date"))
 	if err != nil {
-		dueDate = time.Now().Add(7 * 24 * time.Hour) // Default to 1 week from now
+		// Try alternative format without seconds
+		dueDate, err = time.Parse("2006-01-02T15:04", r.FormValue("due_date"))
+		if err != nil {
+			dueDate = time.Now().Add(7 * 24 * time.Hour) // Default to 1 week from now
+		}
+	}
+
+	// Convert to local timezone to preserve the time as entered by the user
+	location, err := time.LoadLocation("Local")
+	if err == nil {
+		// Create a new time in the local timezone but with the same year, month, day, hour, minute, second
+		dueDate = time.Date(
+			dueDate.Year(),
+			dueDate.Month(),
+			dueDate.Day(),
+			dueDate.Hour(),
+			dueDate.Minute(),
+			dueDate.Second(),
+			0,
+			location,
+		)
 	}
 
 	// Create new assignment
@@ -1461,7 +1465,7 @@ func CreateQuiz(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	// Parse points value
-	pointsValue, err := strconv.ParseFloat(r.FormValue("points_value"), 64)
+	pointsValue, err := strconv.ParseFloat(r.FormValue("points"), 64)
 	if err != nil {
 		pointsValue = 0
 	}
@@ -1714,18 +1718,38 @@ func ViewCalendar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get course ID from URL query parameters
+	courseIDStr := r.URL.Query().Get("course_id")
+	courseID, err := strconv.ParseUint(courseIDStr, 10, 64)
+
 	// Get all courses the user is associated with
 	var courses []models.Course
-	switch {
-	case user.IsProfessor():
-		// Professors see courses they teach
-		db.DB.Where("professor_id = ?", user.ID).Find(&courses)
-	case user.IsTA():
-		// TAs see courses they assist with
-		db.DB.Joins("JOIN course_assistants ON course_assistants.course_id = courses.id").Where("course_assistants.user_id = ?", user.ID).Find(&courses)
-	default: // Students
-		// Students see courses they're enrolled in
-		db.DB.Joins("JOIN user_courses ON user_courses.course_id = courses.id").Where("user_courses.user_id = ?", user.ID).Find(&courses)
+
+	// If a specific course ID was provided, only show that course
+	if courseIDStr != "" && err == nil {
+		// Get the specific course if user has access to it
+		var course models.Course
+		if err := db.DB.First(&course, courseID).Error; err == nil {
+			// Verify user has access to this course
+			if (user.IsProfessor() && course.ProfessorID == user.ID) ||
+				(user.IsTA() && user.IsTAOf(uint(courseID))) ||
+				(user.IsStudent() && user.IsEnrolledIn(uint(courseID))) {
+				courses = append(courses, course)
+			}
+		}
+	} else {
+		// Otherwise show all courses the user has access to
+		switch {
+		case user.IsProfessor():
+			// Professors see courses they teach
+			db.DB.Where("professor_id = ?", user.ID).Find(&courses)
+		case user.IsTA():
+			// TAs see courses they assist with
+			db.DB.Joins("JOIN course_assistants ON course_assistants.course_id = courses.id").Where("course_assistants.user_id = ?", user.ID).Find(&courses)
+		default: // Students
+			// Students see courses they're enrolled in
+			db.DB.Joins("JOIN user_courses ON user_courses.course_id = courses.id").Where("user_courses.user_id = ?", user.ID).Find(&courses)
+		}
 	}
 
 	// Get all events, assignments, and quizzes for these courses
@@ -1751,31 +1775,31 @@ func ViewCalendar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a data structure to pass to the template
-    data := struct {
-        User        models.User
-        Username    string
-        Email       string
-        Role        string
-        IsProfessor bool
-        IsTA        bool
-        IsStudent   bool
-        Courses     []models.Course
-        Events      []models.Event
-        Assignments []models.Assignment
-        Quizzes     []models.Quiz
-    }{
-        User:        user,
-        Username:    user.Username,
-        Email:       user.Email,
-        Role:        user.Role,
-        IsProfessor: user.IsProfessor(),
-        IsTA:        user.IsTA(),
-        IsStudent:   user.IsStudent(),
-        Courses:     courses,
-        Events:      events,
-        Assignments: assignments,
-        Quizzes:     quizzes,
-    }
+	data := struct {
+		User        models.User
+		Username    string
+		Email       string
+		Role        string
+		IsProfessor bool
+		IsTA        bool
+		IsStudent   bool
+		Courses     []models.Course
+		Events      []models.Event
+		Assignments []models.Assignment
+		Quizzes     []models.Quiz
+	}{
+		User:        user,
+		Username:    user.Username,
+		Email:       user.Email,
+		Role:        user.Role,
+		IsProfessor: user.IsProfessor(),
+		IsTA:        user.IsTA(),
+		IsStudent:   user.IsStudent(),
+		Courses:     courses,
+		Events:      events,
+		Assignments: assignments,
+		Quizzes:     quizzes,
+	}
 
 	// Force a clean render of the calendar template
 	tmpl := template.Must(template.ParseFiles("static/calendar.html"))

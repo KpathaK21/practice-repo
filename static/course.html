@@ -411,7 +411,8 @@
                 {{if or .IsProfessor .IsTA}}
                 <div class="card">
                     <h3>Create New Assignment</h3>
-                    <form method="POST" action="/course/create-assignment?course_id={{.Course.ID}}&email={{.User.Email}}">
+                    <form method="POST" action="/course/assignments/create?course_id={{.Course.ID}}&email={{.User.Email}}">
+                        <input type="hidden" name="course_id" value="{{.Course.ID}}">
                         <div class="form-group">
                             <label for="title">Title</label>
                             <input type="text" id="title" name="title" required>
